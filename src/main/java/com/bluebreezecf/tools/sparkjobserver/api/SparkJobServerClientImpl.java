@@ -405,7 +405,34 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 		}
 		return null;
 	}
-	
+
+
+	public boolean deleteJob(String jobId) throws SparkJobServerClientException {
+		final CloseableHttpClient httpClient = buildClient();
+		try {
+			if (!isNotEmpty(jobId)) {
+				throw new SparkJobServerClientException("The given jobId is null or empty.");
+			}
+			StringBuffer postUrlBuff = new StringBuffer(jobServerUrl);
+			postUrlBuff.append("jobs/").append(jobId);
+			HttpDelete deleteMethod = new HttpDelete(postUrlBuff.toString());
+			HttpResponse response = httpClient.execute(deleteMethod);
+			int statusCode = response.getStatusLine().getStatusCode();
+			String resContent = getResponseContent(response.getEntity());
+			if (statusCode == HttpStatus.SC_OK) {
+				return true;
+			} else {
+				logError(statusCode, resContent, false);
+			}
+		} catch (Exception e) {
+			processException("Error occurs when trying to delete the target context:", e);
+		} finally {
+			close(httpClient);
+		}
+
+		return false;
+	}
+
 	/**
 	 * {@inheritDoc}
 	 */
@@ -543,12 +570,22 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 				jobErrorInfo.setErrorClass(resultJson.getString(SparkJobInfo.INFO_KEY_RESULT_ERROR_CLASS));
 			}
 			if (resultJson.containsKey(SparkJobInfo.INFO_KEY_RESULT_STACK)) {
-				JSONArray stackJsonArray = resultJson.getJSONArray(SparkJobInfo.INFO_KEY_RESULT_STACK);
-				String[] stack = new String[stackJsonArray.size()];
-				for (int i = 0; i < stackJsonArray.size(); i++) {
-					stack[i] = stackJsonArray.getString(i);
-				}
-				jobErrorInfo.setStack(stack);
+				JSONArray stackJsonArray = null;
+                try {
+                    stackJsonArray = resultJson.getJSONArray(SparkJobInfo.INFO_KEY_RESULT_STACK);
+                }catch (Exception e){
+                    // nothing
+                }
+                if(stackJsonArray != null){
+                    String[] stack = new String[stackJsonArray.size()];
+                    for (int i = 0; i < stackJsonArray.size(); i++) {
+                        stack[i] = stackJsonArray.getString(i);
+                    }
+                    jobErrorInfo.setStack(stack);
+                }else {
+                    String stack0 = resultJson.getString(SparkJobInfo.INFO_KEY_RESULT_STACK);
+                    jobErrorInfo.setStack(new String[]{stack0});
+                }
 			}
 		}
 	}

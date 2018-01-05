@@ -280,4 +280,7 @@ public interface ISparkJobServerClient {
 	 *         information of the target job configuration
 	 */
 	SparkJobConfig getConfig(String jobId) throws SparkJobServerClientException;
+
+
+	boolean deleteJob(String jobId) throws SparkJobServerClientException;
 }
