@@ -609,7 +609,7 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 		} else {
 			completed = true;
 		}
-		if (completed) {
+		if (completed && jsonObj.containsKey(SparkJobBaseInfo.INFO_KEY_RESULT)) {
 			//Job finished with results
 			jobResult.setResult(jsonObj.get(SparkJobBaseInfo.INFO_KEY_RESULT).toString());
 		} else if (containsAsynjobStatus(jsonObj)) {
