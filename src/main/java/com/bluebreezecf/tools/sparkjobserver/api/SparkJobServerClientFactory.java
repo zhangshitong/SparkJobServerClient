@@ -21,6 +21,7 @@ import java.net.URL;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
 /**
@@ -74,7 +75,24 @@ public final class SparkJobServerClientFactory {
 		}
 		return sparkJobServerClient;
 	}
-	
+
+	public ISparkJobServerClient createSparkJobServerClient(String url, String username, String password)
+			throws SparkJobServerClientException {
+		if (!isValidUrl(url)) {
+			throw new SparkJobServerClientException("Invalid url can't be used to create a spark job server client.");
+		}
+		String sparkJobServerUrl = url.trim();
+		ISparkJobServerClient sparkJobServerClient = jobServerClientCache.get(sparkJobServerUrl);
+		if (null == sparkJobServerClient) {
+			sparkJobServerClient = new SparkJobServerClientImpl(url);
+			if(StringUtils.isNotBlank(username) && StringUtils.isNotBlank(password)){
+				((SparkJobServerClientImpl) sparkJobServerClient).setCredentials(username, password);
+			}
+			jobServerClientCache.put(url, sparkJobServerClient);
+		}
+		return sparkJobServerClient;
+	}
+
 	/**
 	 * Checks the given url is valid or not.
 	 * 

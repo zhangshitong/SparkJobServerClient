@@ -35,14 +35,18 @@ import java.util.stream.Collectors;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.log4j.Logger;
@@ -60,6 +64,9 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 	private static Logger logger = Logger.getLogger(SparkJobServerClientImpl.class);
 	private static final int BUFFER_SIZE = 512 * 1024;
 	private String jobServerUrl;
+	private String userName;
+	private String password;
+
 
 	/**
 	 * Constructs an instance of <code>SparkJobServerClientImpl</code>
@@ -678,7 +685,14 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 	}
 
 	private CloseableHttpClient buildClient() {
-		return HttpClientBuilder.create().build();
+		HttpClientBuilder httpClientBuilder = HttpClientBuilder.create();
+		if(StringUtils.isNotBlank(this.userName) && StringUtils.isNotBlank(this.password)){
+			BasicCredentialsProvider basicCredentialsProvider = new BasicCredentialsProvider();
+			UsernamePasswordCredentials creds = new UsernamePasswordCredentials(userName, password);
+			basicCredentialsProvider.setCredentials(AuthScope.ANY, creds);
+			httpClientBuilder.setDefaultCredentialsProvider(basicCredentialsProvider);
+		}
+		return httpClientBuilder.build();
 	}
 
 	private void close(final CloseableHttpClient client) {
@@ -687,5 +701,11 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 		} catch (final IOException e) {
 			logger.error("could not close client" , e);
 		}
+	}
+
+
+	public void setCredentials(String userName, String password) {
+        this.userName = userName;
+        this.password = password;
 	}
 }
