@@ -327,7 +327,7 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 				if (data != null) {
 					StringEntity strEntity = new StringEntity(data);
 					strEntity.setContentEncoding("UTF-8");
-					strEntity.setContentType("text/plain");
+					strEntity.setContentType("text/plain;charset=utf-8");
 					postMethod.setEntity(strEntity);
 				}
 				
