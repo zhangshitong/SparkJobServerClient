@@ -480,11 +480,13 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 		StringBuffer contents = new StringBuffer();
 		InputStream in = null;
 		try {
+			String encoding = "utf-8";
+//			StringUtils.substring(entity.getContentType().getValue(), entity.getContentType().getValue().indexOf("charset") + 8);
 			in = entity.getContent();
 			BufferedInputStream bis = new BufferedInputStream(in);
 			int readBytes = 0;
 			while ((readBytes = bis.read(buff)) != -1) {
-				contents.append(new String(buff, 0, readBytes));
+				contents.append(new String(buff, 0, readBytes, encoding));
 			}
 		} catch (Exception e) {
 			logger.error("Error occurs when trying to reading response", e);
