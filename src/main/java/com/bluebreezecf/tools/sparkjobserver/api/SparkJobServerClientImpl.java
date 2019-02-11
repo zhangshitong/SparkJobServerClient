@@ -36,6 +36,7 @@ import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.http.Consts;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
@@ -45,6 +46,7 @@ import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ByteArrayEntity;
+import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -66,6 +68,7 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 	private String jobServerUrl;
 	private String userName;
 	private String password;
+	private ContentType defaultTextWithUtf8 = ContentType.create("text/plain",Consts.UTF_8);
 
 
 	/**
@@ -325,7 +328,7 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 				}
 				HttpPost postMethod = new HttpPost(postUrlBuff.toString());
 				if (data != null) {
-					StringEntity strEntity = new StringEntity(data);
+					StringEntity strEntity = new StringEntity(data, defaultTextWithUtf8);
 					strEntity.setContentEncoding("UTF-8");
 					strEntity.setContentType("text/plain;charset=utf-8");
 					postMethod.setEntity(strEntity);
