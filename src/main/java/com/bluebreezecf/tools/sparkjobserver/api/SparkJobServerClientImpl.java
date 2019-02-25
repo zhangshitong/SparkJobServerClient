@@ -115,7 +115,7 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 			}
 		} catch (HttpHostConnectException e){
 			int retry = getRetriedTimes();
-			Pair<Integer, String> fallback = fallbackWithRetry.getFallback();
+			Pair<Integer, String> fallback = fallbackWithRetry.getFallback(retry);
 			if(retry <= fallback.getValue0()){
 				this.jobServerUrl = fallback.getValue1();
 				return getJars();
@@ -153,7 +153,7 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 			}
 		}catch (HttpHostConnectException e){
 			int retry = getRetriedTimes();
-			Pair<Integer, String> fallback = fallbackWithRetry.getFallback();
+			Pair<Integer, String> fallback = fallbackWithRetry.getFallback(retry);
 			if(retry <= fallback.getValue0()){
 				this.jobServerUrl = fallback.getValue1();
 				return uploadSparkJobJar(jarData, appName);
@@ -211,7 +211,7 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 			}
 		} catch (HttpHostConnectException e){
 			int retry = getRetriedTimes();
-			Pair<Integer, String> fallback = fallbackWithRetry.getFallback();
+			Pair<Integer, String> fallback = fallbackWithRetry.getFallback(retry);
 			if(retry <= fallback.getValue0()){
 				this.jobServerUrl = fallback.getValue1();
 				return getContexts();
@@ -262,7 +262,7 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 			}
 		} catch (HttpHostConnectException e){
 			int retry = getRetriedTimes();
-			Pair<Integer, String> fallback = fallbackWithRetry.getFallback();
+			Pair<Integer, String> fallback = fallbackWithRetry.getFallback(retry);
 			if(retry <= fallback.getValue0()){
 				this.jobServerUrl = fallback.getValue1();
 				return createContext(contextName, params);
@@ -302,7 +302,7 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 			}
 		} catch (HttpHostConnectException e){
 			int retry = getRetriedTimes();
-			Pair<Integer, String> fallback = fallbackWithRetry.getFallback();
+			Pair<Integer, String> fallback = fallbackWithRetry.getFallback(retry);
 			if(retry <= fallback.getValue0()){
 				this.jobServerUrl = fallback.getValue1();
 				return deleteContext(contextName);
@@ -348,7 +348,7 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 			}
 		} catch (HttpHostConnectException e){
 			int retry = getRetriedTimes();
-			Pair<Integer, String> fallback = fallbackWithRetry.getFallback();
+			Pair<Integer, String> fallback = fallbackWithRetry.getFallback(retry);
 			if(retry <= fallback.getValue0()){
 				return getJobs();
 			}else{
@@ -404,7 +404,7 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 			}
 		} catch (HttpHostConnectException e){
 			int retry = getRetriedTimes();
-			Pair<Integer, String> fallback = fallbackWithRetry.getFallback();
+			Pair<Integer, String> fallback = fallbackWithRetry.getFallback(retry);
 			if(retry <= fallback.getValue0()){
 				this.jobServerUrl = fallback.getValue1();
 				return startJob(data, params);
@@ -476,7 +476,7 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 			}
 		} catch (HttpHostConnectException e){
 			int retry = getRetriedTimes();
-			Pair<Integer, String> fallback = fallbackWithRetry.getFallback();
+			Pair<Integer, String> fallback = fallbackWithRetry.getFallback(retry);
 			if(retry <= fallback.getValue0()){
 				this.jobServerUrl = fallback.getValue1();
 				return getJobResult(jobId);
@@ -511,7 +511,7 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 			}
 		} catch (HttpHostConnectException e){
 			int retry = getRetriedTimes();
-			Pair<Integer, String> fallback = fallbackWithRetry.getFallback();
+			Pair<Integer, String> fallback = fallbackWithRetry.getFallback(retry);
 			if(retry <= fallback.getValue0()){
 				this.jobServerUrl = fallback.getValue1();
 				return deleteJob(jobId);
@@ -549,7 +549,7 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 			return jobConfg;
 		} catch (HttpHostConnectException e){
 			int retry = getRetriedTimes();
-			Pair<Integer, String> fallback = fallbackWithRetry.getFallback();
+			Pair<Integer, String> fallback = fallbackWithRetry.getFallback(retry);
 			if(retry <= fallback.getValue0()){
 				this.jobServerUrl = fallback.getValue1();
 				return getConfig(jobId);
@@ -562,6 +562,15 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 			close(httpClient);
 		}
 		return null;
+	}
+
+
+	@Override
+	public void initialize() throws SparkJobServerClientException {
+		if(retryTimes.get() == null){
+			retryTimes.set(new AtomicInteger(0));
+		}
+		retryTimes.get().set(0);
 	}
 
 	/**

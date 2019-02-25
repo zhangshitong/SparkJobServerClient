@@ -85,6 +85,7 @@ public final class SparkJobServerClientFactory {
 			if(fallbackWithRetry != null){
 				((SparkJobServerClientImpl) sparkJobServerClient).setFallbackWithRetry(fallbackWithRetry);
 			}
+			sparkJobServerClient.initialize();
 			jobServerClientCache.put(url, sparkJobServerClient);
 		}
 		return sparkJobServerClient;
@@ -105,6 +106,7 @@ public final class SparkJobServerClientFactory {
 			if(fallbackWithRetry != null){
 				((SparkJobServerClientImpl) sparkJobServerClient).setFallbackWithRetry(fallbackWithRetry);
 			}
+			sparkJobServerClient.initialize();
 			jobServerClientCache.put(url, sparkJobServerClient);
 		}
 		return sparkJobServerClient;

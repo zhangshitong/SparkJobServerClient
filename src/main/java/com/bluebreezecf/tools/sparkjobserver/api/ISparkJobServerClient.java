@@ -283,4 +283,10 @@ public interface ISparkJobServerClient {
 
 
 	boolean deleteJob(String jobId) throws SparkJobServerClientException;
+
+	/**
+	 *
+	 * @throws SparkJobServerClientException
+	 */
+	void initialize() throws SparkJobServerClientException;
 }

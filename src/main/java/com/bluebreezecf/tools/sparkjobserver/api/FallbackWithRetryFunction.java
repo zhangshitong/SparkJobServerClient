@@ -7,5 +7,5 @@ public interface FallbackWithRetryFunction{
      *
      * @return pair (maxRetryTimes, retryUsingHttpUrl)
      */
-      public Pair<Integer, String> getFallback();
+      public Pair<Integer, String> getFallback(Integer retryI);
 }
