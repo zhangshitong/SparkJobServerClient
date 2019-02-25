@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import net.sf.json.JSONArray;
@@ -45,6 +46,7 @@ import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.conn.HttpHostConnectException;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
@@ -52,6 +54,7 @@ import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.log4j.Logger;
+import org.javatuples.Pair;
 
 /**
  * The default client implementation of <code>ISparkJobServerClient</code>.
@@ -69,7 +72,8 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 	private String userName;
 	private String password;
 	private ContentType defaultTextWithUtf8 = ContentType.create("text/plain",Consts.UTF_8);
-
+	private ThreadLocal<AtomicInteger> retryTimes = new ThreadLocal<AtomicInteger>();
+	private FallbackWithRetryFunction fallbackWithRetry = null;
 
 	/**
 	 * Constructs an instance of <code>SparkJobServerClientImpl</code>
@@ -109,7 +113,16 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 			} else {
 				logError(statusCode, resContent, true);
 			}
-		} catch (Exception e) {
+		} catch (HttpHostConnectException e){
+			int retry = getRetriedTimes();
+			Pair<Integer, String> fallback = fallbackWithRetry.getFallback();
+			if(retry <= fallback.getValue0()){
+				this.jobServerUrl = fallback.getValue1();
+				return getJars();
+			}else{
+				processException("Error occurs when retry to get information of jars, retried "+retry+" times ", e);
+			}
+		} catch(Exception e) {
 			processException("Error occurs when trying to get information of jars:", e);
 		} finally {
 			close(httpClient);
@@ -137,6 +150,15 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 			getResponseContent(response.getEntity());
 			if (statusCode == HttpStatus.SC_OK) {
 				return true;
+			}
+		}catch (HttpHostConnectException e){
+			int retry = getRetriedTimes();
+			Pair<Integer, String> fallback = fallbackWithRetry.getFallback();
+			if(retry <= fallback.getValue0()){
+				this.jobServerUrl = fallback.getValue1();
+				return uploadSparkJobJar(jarData, appName);
+			}else{
+				processException("Error occurs when retry to uploading spark job jars, retried "+retry+" times ", e);
 			}
 		} catch (Exception e) {
 			logger.error("Error occurs when uploading spark job jars:", e);
@@ -187,7 +209,16 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 			} else {
 				logError(statusCode, resContent, true);
 			}
-		} catch (Exception e) {
+		} catch (HttpHostConnectException e){
+			int retry = getRetriedTimes();
+			Pair<Integer, String> fallback = fallbackWithRetry.getFallback();
+			if(retry <= fallback.getValue0()){
+				this.jobServerUrl = fallback.getValue1();
+				return getContexts();
+			}else{
+				processException("Error occurs when retry to get information of contexts, retried "+retry+" times ", e);
+			}
+		}catch (Exception e) {
 			processException("Error occurs when trying to get information of contexts:", e);
 		} finally {
 			close(httpClient);
@@ -229,6 +260,15 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 			} else {
 				logError(statusCode, resContent, false);
 			}
+		} catch (HttpHostConnectException e){
+			int retry = getRetriedTimes();
+			Pair<Integer, String> fallback = fallbackWithRetry.getFallback();
+			if(retry <= fallback.getValue0()){
+				this.jobServerUrl = fallback.getValue1();
+				return createContext(contextName, params);
+			}else{
+				processException("Error occurs when retry to create a context, retried "+retry+" times ", e);
+			}
 		} catch (Exception e) {
 			processException("Error occurs when trying to create a context:", e);
 		} finally {
@@ -259,6 +299,15 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 				return true;
 			} else {
 				logError(statusCode, resContent, false);
+			}
+		} catch (HttpHostConnectException e){
+			int retry = getRetriedTimes();
+			Pair<Integer, String> fallback = fallbackWithRetry.getFallback();
+			if(retry <= fallback.getValue0()){
+				this.jobServerUrl = fallback.getValue1();
+				return deleteContext(contextName);
+			}else{
+				processException("Error occurs when retry to delete the target context, retried "+retry+" times ", e);
 			}
 		} catch (Exception e) {
 			processException("Error occurs when trying to delete the target context:", e);
@@ -296,6 +345,14 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 				}
 			} else {
 				logError(statusCode, resContent, true);
+			}
+		} catch (HttpHostConnectException e){
+			int retry = getRetriedTimes();
+			Pair<Integer, String> fallback = fallbackWithRetry.getFallback();
+			if(retry <= fallback.getValue0()){
+				return getJobs();
+			}else{
+				processException("Error occurs when retry to get information of jobs, retried "+retry+" times ", e);
 			}
 		} catch (Exception e) {
 			processException("Error occurs when trying to get information of jobs:", e);
@@ -344,6 +401,15 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 				}
 			} else {
 				throw new SparkJobServerClientException("The given params should contains appName and classPath");
+			}
+		} catch (HttpHostConnectException e){
+			int retry = getRetriedTimes();
+			Pair<Integer, String> fallback = fallbackWithRetry.getFallback();
+			if(retry <= fallback.getValue0()){
+				this.jobServerUrl = fallback.getValue1();
+				return startJob(data, params);
+			}else{
+				processException("Error occurs when retry to start a new job, retried "+retry+" times ", e);
 			}
 		} catch (Exception e) {
 			processException("Error occurs when trying to start a new job:", e);
@@ -408,6 +474,15 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 			} else {
 				logError(statusCode, resContent, true);
 			}
+		} catch (HttpHostConnectException e){
+			int retry = getRetriedTimes();
+			Pair<Integer, String> fallback = fallbackWithRetry.getFallback();
+			if(retry <= fallback.getValue0()){
+				this.jobServerUrl = fallback.getValue1();
+				return getJobResult(jobId);
+			}else{
+				processException("Error occurs when retry to get information of the target job, retried "+retry+" times ", e);
+			}
 		} catch (Exception e) {
 			processException("Error occurs when trying to get information of the target job:", e);
 		} finally {
@@ -433,6 +508,15 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 				return true;
 			} else {
 				logError(statusCode, resContent, false);
+			}
+		} catch (HttpHostConnectException e){
+			int retry = getRetriedTimes();
+			Pair<Integer, String> fallback = fallbackWithRetry.getFallback();
+			if(retry <= fallback.getValue0()){
+				this.jobServerUrl = fallback.getValue1();
+				return deleteJob(jobId);
+			}else{
+				processException("Error occurs when retry to delete the target context, retried "+retry+" times ", e);
 			}
 		} catch (Exception e) {
 			processException("Error occurs when trying to delete the target context:", e);
@@ -463,6 +547,15 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 				jobConfg.putConfigItem(key, jsonObj.get(key));
 			}
 			return jobConfg;
+		} catch (HttpHostConnectException e){
+			int retry = getRetriedTimes();
+			Pair<Integer, String> fallback = fallbackWithRetry.getFallback();
+			if(retry <= fallback.getValue0()){
+				this.jobServerUrl = fallback.getValue1();
+				return getConfig(jobId);
+			}else{
+				processException("Error occurs when retry to get information of the target job config, retried "+retry+" times ", e);
+			}
 		} catch (Exception e) {
 			processException("Error occurs when trying to get information of the target job config:", e);
 		} finally {
@@ -708,9 +801,22 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 		}
 	}
 
+	/**
+	 * @return
+	 */
+	private Integer getRetriedTimes(){
+		if(retryTimes.get() == null){
+			retryTimes.set(new AtomicInteger(0));
+		}
+		return retryTimes.get().incrementAndGet();
+	}
 
 	public void setCredentials(String userName, String password) {
         this.userName = userName;
         this.password = password;
+	}
+
+	public void setFallbackWithRetry(FallbackWithRetryFunction fallbackWithRetry) {
+		this.fallbackWithRetry = fallbackWithRetry;
 	}
 }

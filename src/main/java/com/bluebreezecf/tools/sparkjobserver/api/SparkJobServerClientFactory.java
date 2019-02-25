@@ -34,18 +34,29 @@ import org.apache.log4j.Logger;
  */
 public final class SparkJobServerClientFactory {
 	private static final SparkJobServerClientFactory INSTANCE = new SparkJobServerClientFactory();
-	
+
 	private static Logger logger = Logger.getLogger(SparkJobServerClientFactory.class);
 	
 	private static Map<String, ISparkJobServerClient> jobServerClientCache 
 	    = new ConcurrentHashMap<String, ISparkJobServerClient>();
-	
+
+
+	private FallbackWithRetryFunction fallbackWithRetry = null;
+
 	/**
-	 * The default constructor of <code>SparkJobServerClientFactory</code>. 
+	 * The default constructor of <code>SparkJobServerClientFactory</code>.
 	 */
 	private SparkJobServerClientFactory() {
+
 	}
-	
+	private SparkJobServerClientFactory(FallbackWithRetryFunction retryFunction) {
+		this.fallbackWithRetry = retryFunction;
+	}
+
+	public SparkJobServerClientFactory withFallbackFunction(FallbackWithRetryFunction retryFunction){
+		this.fallbackWithRetry = retryFunction;
+		return this;
+	}
 	/**
 	 * Gets the unique instance of <code>SparkJobServerClientFactory</code>.
 	 * @return the instance of <code>SparkJobServerClientFactory</code>
@@ -71,6 +82,9 @@ public final class SparkJobServerClientFactory {
 		ISparkJobServerClient sparkJobServerClient = jobServerClientCache.get(sparkJobServerUrl);
 		if (null == sparkJobServerClient) {
 			sparkJobServerClient = new SparkJobServerClientImpl(url);
+			if(fallbackWithRetry != null){
+				((SparkJobServerClientImpl) sparkJobServerClient).setFallbackWithRetry(fallbackWithRetry);
+			}
 			jobServerClientCache.put(url, sparkJobServerClient);
 		}
 		return sparkJobServerClient;
@@ -87,6 +101,9 @@ public final class SparkJobServerClientFactory {
 			sparkJobServerClient = new SparkJobServerClientImpl(url);
 			if(StringUtils.isNotBlank(username) && StringUtils.isNotBlank(password)){
 				((SparkJobServerClientImpl) sparkJobServerClient).setCredentials(username, password);
+			}
+			if(fallbackWithRetry != null){
+				((SparkJobServerClientImpl) sparkJobServerClient).setFallbackWithRetry(fallbackWithRetry);
 			}
 			jobServerClientCache.put(url, sparkJobServerClient);
 		}

@@ -16,6 +16,7 @@
 
 package com.bluebreezecf.tools.sparkjobserver.api;
 
+import org.javatuples.Pair;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -41,7 +42,7 @@ import static org.hamcrest.Matchers.is;
  * @since 2017-03-08
  */
 public class SparkJobServiceClientImplTest {
-    private static final String defaultSparkJobHost = "54.178.178.219";
+    private static final String defaultSparkJobHost = "192.168.106.193";
     private static final String defaultSparkJobPort = "8090";
     private static String endpoint = String.format("http://%s:%s/", defaultSparkJobHost, defaultSparkJobPort);
     private ISparkJobServerClient client;
@@ -50,8 +51,9 @@ public class SparkJobServiceClientImplTest {
     @Before
     public void setUp() throws Exception {
         client = SparkJobServerClientFactory
-                .getInstance()
-                .createSparkJobServerClient(endpoint);
+                .getInstance().withFallbackFunction(()->{
+                    return Pair.with(2, "http://192.168.106.93:8090/");
+                }).createSparkJobServerClient(endpoint);
     }
 
     @After
@@ -59,6 +61,10 @@ public class SparkJobServiceClientImplTest {
 
     }
 
+    @Test
+    public void testRunGetJars() throws Exception {
+        System.out.println(client.getJars());
+    }
     /**
      * test runJob with File resource
      * Warning: This test require deleting jar after test.
@@ -81,9 +87,7 @@ public class SparkJobServiceClientImplTest {
 
         SparkJobResult result = client.startJob(inputData, params);
         String status = result.getStatus();
-
         assertThat(status, anyOf(is("STARTED"), is("FINISHED")));
-
         String jobId;
         if (status.equals(SparkJobResult.INFO_STATUS_FINISHED))
         {
