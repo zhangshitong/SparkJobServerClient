@@ -106,6 +106,7 @@
       </dependency>
   </dependencies>
  <distributionManagement>
+      <!--
 		<repository>
 			<id>localMaven_release</id>
 			<name>local maven repo</name>
@@ -116,7 +117,18 @@
 			<name>local maven repo</name>
 			<url>http://116.62.153.132:9393/nexus/content/repositories/snapshots/</url>
 	    </snapshotRepository>
-
+    -->
+		<repository>
+			<id>rayfayMaven_release</id>
+			<name>Rf-Release</name>
+			<url>http://nexus.rf.io/repository/maven-releases/</url>
+	    </repository>
+	    <snapshotRepository>
+			<id>rayfayMaven_snapshots</id>
+			<name>Rf-Snapshots</name>
+			<url>http://nexus.rf.io/repository/maven-snapshots/</url>
+	    </snapshotRepository>
+		
 	</distributionManagement>
   <build>
 	<plugins>
