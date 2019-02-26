@@ -125,6 +125,7 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 		} catch(Exception e) {
 			processException("Error occurs when trying to get information of jars:", e);
 		} finally {
+			resetRetryThreadLocal();
 			close(httpClient);
 		}
 		return sparkJobJarInfos;
@@ -163,6 +164,7 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 		} catch (Exception e) {
 			logger.error("Error occurs when uploading spark job jars:", e);
 		} finally {
+			resetRetryThreadLocal();
 			close(httpClient);
 			closeStream(jarData);
 		}
@@ -221,6 +223,7 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 		}catch (Exception e) {
 			processException("Error occurs when trying to get information of contexts:", e);
 		} finally {
+			resetRetryThreadLocal();
 			close(httpClient);
 		}
 		return contexts;
@@ -272,6 +275,7 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 		} catch (Exception e) {
 			processException("Error occurs when trying to create a context:", e);
 		} finally {
+			resetRetryThreadLocal();
 			close(httpClient);
 		}
 		return false;
@@ -312,6 +316,7 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 		} catch (Exception e) {
 			processException("Error occurs when trying to delete the target context:", e);
 		} finally {
+			resetRetryThreadLocal();
 			close(httpClient);
 		}
 		return false;
@@ -357,6 +362,7 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 		} catch (Exception e) {
 			processException("Error occurs when trying to get information of jobs:", e);
 		} finally {
+			resetRetryThreadLocal();
 			close(httpClient);
 		}
 		return sparkJobInfos;
@@ -414,6 +420,7 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 		} catch (Exception e) {
 			processException("Error occurs when trying to start a new job:", e);
 		} finally {
+			resetRetryThreadLocal();
 			close(httpClient);
 		}
 		return null;
@@ -486,6 +493,7 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 		} catch (Exception e) {
 			processException("Error occurs when trying to get information of the target job:", e);
 		} finally {
+			resetRetryThreadLocal();
 			close(httpClient);
 		}
 		return null;
@@ -521,6 +529,7 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 		} catch (Exception e) {
 			processException("Error occurs when trying to delete the target context:", e);
 		} finally {
+			resetRetryThreadLocal();
 			close(httpClient);
 		}
 
@@ -559,6 +568,7 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 		} catch (Exception e) {
 			processException("Error occurs when trying to get information of the target job config:", e);
 		} finally {
+			resetRetryThreadLocal();
 			close(httpClient);
 		}
 		return null;
@@ -567,11 +577,16 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 
 	@Override
 	public void initialize() throws SparkJobServerClientException {
+
+	}
+
+	private void resetRetryThreadLocal() {
 		if(retryTimes.get() == null){
 			retryTimes.set(new AtomicInteger(0));
 		}
 		retryTimes.get().set(0);
 	}
+
 
 	/**
 	 * Gets the contents of the http response from the given <code>HttpEntity</code>
