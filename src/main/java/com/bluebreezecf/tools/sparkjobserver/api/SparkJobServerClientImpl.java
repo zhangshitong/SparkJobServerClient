@@ -26,6 +26,8 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.SocketException;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -113,7 +115,7 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 			} else {
 				logError(statusCode, resContent, true);
 			}
-		} catch (HttpHostConnectException e){
+		} catch (SocketException | UnknownHostException  e){
 			int retry = getRetriedTimes();
 			Pair<Integer, String> fallback = fallbackWithRetry.getFallback(retry);
 			if(retry <= fallback.getValue0()){
@@ -152,7 +154,7 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 			if (statusCode == HttpStatus.SC_OK) {
 				return true;
 			}
-		}catch (HttpHostConnectException e){
+		}catch (SocketException | UnknownHostException e){
 			int retry = getRetriedTimes();
 			Pair<Integer, String> fallback = fallbackWithRetry.getFallback(retry);
 			if(retry <= fallback.getValue0()){
@@ -211,7 +213,7 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 			} else {
 				logError(statusCode, resContent, true);
 			}
-		} catch (HttpHostConnectException e){
+		} catch (SocketException | UnknownHostException e){
 			int retry = getRetriedTimes();
 			Pair<Integer, String> fallback = fallbackWithRetry.getFallback(retry);
 			if(retry <= fallback.getValue0()){
@@ -263,7 +265,7 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 			} else {
 				logError(statusCode, resContent, false);
 			}
-		} catch (HttpHostConnectException e){
+		} catch (SocketException | UnknownHostException e){
 			int retry = getRetriedTimes();
 			Pair<Integer, String> fallback = fallbackWithRetry.getFallback(retry);
 			if(retry <= fallback.getValue0()){
@@ -304,7 +306,7 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 			} else {
 				logError(statusCode, resContent, false);
 			}
-		} catch (HttpHostConnectException e){
+		} catch (SocketException | UnknownHostException e){
 			int retry = getRetriedTimes();
 			Pair<Integer, String> fallback = fallbackWithRetry.getFallback(retry);
 			if(retry <= fallback.getValue0()){
@@ -351,7 +353,7 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 			} else {
 				logError(statusCode, resContent, true);
 			}
-		} catch (HttpHostConnectException e){
+		} catch (SocketException | UnknownHostException e){
 			int retry = getRetriedTimes();
 			Pair<Integer, String> fallback = fallbackWithRetry.getFallback(retry);
 			if(retry <= fallback.getValue0()){
@@ -408,7 +410,7 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 			} else {
 				throw new SparkJobServerClientException("The given params should contains appName and classPath");
 			}
-		} catch (HttpHostConnectException e){
+		} catch (SocketException | UnknownHostException e){
 			int retry = getRetriedTimes();
 			Pair<Integer, String> fallback = fallbackWithRetry.getFallback(retry);
 			if(retry <= fallback.getValue0()){
@@ -481,7 +483,7 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 			} else {
 				logError(statusCode, resContent, true);
 			}
-		} catch (HttpHostConnectException e){
+		} catch (SocketException | UnknownHostException e){
 			int retry = getRetriedTimes();
 			Pair<Integer, String> fallback = fallbackWithRetry.getFallback(retry);
 			if(retry <= fallback.getValue0()){
@@ -517,7 +519,7 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 			} else {
 				logError(statusCode, resContent, false);
 			}
-		} catch (HttpHostConnectException e){
+		} catch (SocketException | UnknownHostException e){
 			int retry = getRetriedTimes();
 			Pair<Integer, String> fallback = fallbackWithRetry.getFallback(retry);
 			if(retry <= fallback.getValue0()){
@@ -556,7 +558,7 @@ class SparkJobServerClientImpl implements ISparkJobServerClient {
 				jobConfg.putConfigItem(key, jsonObj.get(key));
 			}
 			return jobConfg;
-		} catch (HttpHostConnectException e){
+		} catch (SocketException | UnknownHostException e){
 			int retry = getRetriedTimes();
 			Pair<Integer, String> fallback = fallbackWithRetry.getFallback(retry);
 			if(retry <= fallback.getValue0()){
